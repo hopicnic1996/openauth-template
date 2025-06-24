@@ -97,8 +97,10 @@ async function handleDashboard(request: Request, env: Env): Promise<Response> {
   const authResult = await requireAuth(request, env, UserRole.USER);
   
   if (authResult instanceof Response) {
-    // Redirect to home page if not authenticated
-    return Response.redirect(new URL("/", request.url).toString());
+    // Return unauthorized page instead of redirecting
+    return new Response(getUnauthorizedPage(), {
+      headers: { "Content-Type": "text/html" }
+    });
   }
 
   return new Response(getDashboard(authResult.user), {
@@ -110,7 +112,9 @@ async function handleProfile(request: Request, env: Env): Promise<Response> {
   const authResult = await requireAuth(request, env, UserRole.USER);
   
   if (authResult instanceof Response) {
-    return authResult;
+    return new Response(getUnauthorizedPage(), {
+      headers: { "Content-Type": "text/html" }
+    });
   }
 
   // Simple profile page
@@ -357,7 +361,7 @@ async function handleOpenAuth(request: Request, env: Env, ctx: ExecutionContext)
       });
 
       // Return a redirect response instead of the default subject response
-      return Response.redirect(`/dashboard?token=${sessionToken}`);
+      return Response.redirect(new URL(`/dashboard?token=${sessionToken}`, request.url).toString());
     },
   }).fetch(request, env, ctx);
 }

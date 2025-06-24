@@ -75,24 +75,34 @@ export function getBaseTemplate(title: string, content: string, user?: User): st
             }
         }
 
-        // Store token in localStorage if provided in URL
-        const urlToken = new URLSearchParams(location.search).get('token');
+        // Handle token from URL - store it and clean URL
+        const urlParams = new URLSearchParams(location.search);
+        const urlToken = urlParams.get('token');
+        
         if (urlToken) {
+            // Store token in localStorage
             localStorage.setItem('auth_token', urlToken);
-            // Clean URL without token and reload to show authenticated state
-            const cleanUrl = location.pathname;
+            
+            // Clean URL by removing the token parameter
+            urlParams.delete('token');
+            const cleanUrl = location.pathname + (urlParams.toString() ? '?' + urlParams.toString() : '');
+            
+            // Replace the current URL without the token and reload to show authenticated state
             history.replaceState({}, document.title, cleanUrl);
             window.location.reload();
-        }
-
-        // Add token to page requests for authentication
-        const storedToken = localStorage.getItem('auth_token');
-        if (storedToken && !urlToken && !window.location.search.includes('token=')) {
-            // Add token to current page URL for server-side authentication
-            const currentUrl = new URL(window.location);
-            currentUrl.searchParams.set('token', storedToken);
-            if (currentUrl.toString() !== window.location.toString()) {
-                window.location.href = currentUrl.toString();
+        } else {
+            // If no token in URL, check if we have one in localStorage
+            const storedToken = localStorage.getItem('auth_token');
+            
+            // Add token to URL for protected pages if we have one stored
+            if (storedToken) {
+                const protectedPages = ['/dashboard', '/profile', '/admin'];
+                const isProtectedPage = protectedPages.includes(location.pathname);
+                
+                if (isProtectedPage && !urlParams.has('token')) {
+                    // Add token to current page URL for server-side authentication
+                    window.location.href = location.pathname + '?token=' + storedToken;
+                }
             }
         }
 
