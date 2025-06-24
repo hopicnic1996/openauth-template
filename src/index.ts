@@ -343,8 +343,8 @@ async function handleOpenAuth(request: Request, env: Env, ctx: ExecutionContext)
 async function getOrCreateUser(env: Env, email: string): Promise<string> {
   const result = await env.AUTH_DB.prepare(
     `
-    INSERT INTO user (email)
-    VALUES (?)
+    INSERT INTO user (email, updated_at)
+    VALUES (?, datetime('now'))
     ON CONFLICT (email) DO UPDATE SET 
       email = email,
       updated_at = datetime('now')

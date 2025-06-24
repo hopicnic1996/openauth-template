@@ -5,7 +5,10 @@ ALTER TABLE user ADD COLUMN first_name TEXT;
 ALTER TABLE user ADD COLUMN last_name TEXT;
 ALTER TABLE user ADD COLUMN last_login TIMESTAMP;
 ALTER TABLE user ADD COLUMN is_active BOOLEAN NOT NULL DEFAULT 1;
-ALTER TABLE user ADD COLUMN updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP;
+ALTER TABLE user ADD COLUMN updated_at TIMESTAMP;
+
+-- Update existing users with current timestamp for updated_at
+UPDATE user SET updated_at = CURRENT_TIMESTAMP WHERE updated_at IS NULL;
 
 -- Create sessions table for better session management
 CREATE TABLE IF NOT EXISTS user_sessions (
