@@ -13,21 +13,25 @@ import {
   requireAuth, 
   getSessionToken,
   cleanExpiredSessions,
+  ensureAdminUser,
+  ensureFirstAdmin,
   User
 } from "./auth";
 import { 
   getHomePage, 
   getDashboard, 
   getUnauthorizedPage,
-  getBaseTemplate 
+  getBaseTemplate,
+  getAdminSetupPage
 } from "./templates";
 
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext) {
     const url = new URL(request.url);
     
-    // Clean expired sessions periodically
+    // Clean expired sessions and ensure first admin exists
     ctx.waitUntil(cleanExpiredSessions(env));
+    ctx.waitUntil(ensureFirstAdmin(env));
 
     // Handle different routes
     switch (url.pathname) {
@@ -42,6 +46,9 @@ export default {
         
       case "/admin":
         return handleAdmin(request, env);
+        
+      case "/setup":
+        return handleSetup(request, env);
         
       case "/unauthorized":
         return new Response(getUnauthorizedPage(), {
@@ -341,23 +348,12 @@ async function handleOpenAuth(request: Request, env: Env, ctx: ExecutionContext)
 }
 
 async function getOrCreateUser(env: Env, email: string): Promise<string> {
-  const result = await env.AUTH_DB.prepare(
-    `
-    INSERT INTO user (email, updated_at)
-    VALUES (?, datetime('now'))
-    ON CONFLICT (email) DO UPDATE SET 
-      email = email,
-      updated_at = datetime('now')
-    RETURNING id;
-    `,
-  )
-    .bind(email)
-    .first<{ id: string }>();
-    
-  if (!result) {
-    throw new Error(`Unable to process user: ${email}`);
-  }
-  
-  console.log(`Found or created user ${result.id} with email ${email}`);
-  return result.id;
+  // Use the enhanced admin-aware user creation function
+  return await ensureAdminUser(env, email);
+}
+
+async function handleSetup(request: Request, env: Env): Promise<Response> {
+  return new Response(getAdminSetupPage(), {
+    headers: { "Content-Type": "text/html" }
+  });
 }

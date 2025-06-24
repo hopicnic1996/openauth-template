@@ -56,6 +56,13 @@ interface UserDbResult {
   expires_at: string;
 }
 
+// Default admin emails - users with these emails will automatically get admin role
+const DEFAULT_ADMIN_EMAILS = [
+  'admin@myauth.com',
+  'admin@example.com',
+  'admin@localhost',
+];
+
 // Create a new session
 export async function createSession(env: Env, userId: string): Promise<string> {
   const token = crypto.randomUUID();
@@ -168,4 +175,47 @@ export async function requireAuth(
   }
 
   return { user };
+}
+
+// Ensure admin users are created with proper roles
+export async function ensureAdminUser(env: Env, email: string): Promise<string> {
+  const isDefaultAdmin = DEFAULT_ADMIN_EMAILS.includes(email.toLowerCase());
+  const role = isDefaultAdmin ? UserRole.ADMIN : UserRole.USER;
+  
+  const result = await env.AUTH_DB.prepare(`
+    INSERT INTO user (email, role, updated_at, created_at)
+    VALUES (?, ?, datetime('now'), datetime('now'))
+    ON CONFLICT (email) DO UPDATE SET 
+      role = CASE 
+        WHEN ? = 'admin' AND role != 'admin' THEN 'admin'
+        ELSE role
+      END,
+      updated_at = datetime('now')
+    RETURNING id;
+  `).bind(email, role, role).first<{ id: string }>();
+  
+  if (!result) {
+    throw new Error(`Unable to process user: ${email}`);
+  }
+  
+  console.log(`Found or created user ${result.id} with email ${email} and role ${role}`);
+  return result.id;
+}
+
+// Create first admin user if none exists
+export async function ensureFirstAdmin(env: Env): Promise<void> {
+  const adminCount = await env.AUTH_DB.prepare(`
+    SELECT COUNT(*) as count FROM user WHERE role = 'admin'
+  `).first<{ count: number }>();
+
+  if (adminCount && adminCount.count === 0) {
+    // No admin users exist, create the default one
+    await ensureAdminUser(env, DEFAULT_ADMIN_EMAILS[0]);
+    console.log('Created first admin user with email:', DEFAULT_ADMIN_EMAILS[0]);
+  }
+}
+
+// Check if email should have admin role
+export function isDefaultAdmin(email: string): boolean {
+  return DEFAULT_ADMIN_EMAILS.includes(email.toLowerCase());
 } 

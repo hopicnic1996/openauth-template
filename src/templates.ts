@@ -39,8 +39,12 @@ export function getBaseTemplate(title: string, content: string, user?: User): st
                 ` : `
                 <div class="flex items-center">
                     <a href="/authorize" 
-                       class="bg-white text-blue-600 px-4 py-2 rounded-lg font-medium hover:bg-gray-100 transition-colors">
+                       class="bg-white text-blue-600 px-4 py-2 rounded-lg font-medium hover:bg-gray-100 transition-colors mr-3">
                         Sign In
+                    </a>
+                    <a href="/setup" 
+                       class="text-white hover:text-blue-100 transition-colors text-sm">
+                        Admin Setup
                     </a>
                 </div>
                 `}
@@ -59,6 +63,12 @@ export function getBaseTemplate(title: string, content: string, user?: User): st
             if (getStartedBtn) {
                 const redirectUri = encodeURIComponent(location.origin + '/dashboard');
                 getStartedBtn.href = '/authorize?redirect_uri=' + redirectUri + '&client_id=your-client-id&response_type=code';
+            }
+
+            const adminSigninBtn = document.getElementById('admin-signin-btn');
+            if (adminSigninBtn) {
+                const redirectUri = encodeURIComponent(location.origin + '/dashboard');
+                adminSigninBtn.href = '/authorize?redirect_uri=' + redirectUri + '&client_id=your-client-id&response_type=code';
             }
         });
 
@@ -362,4 +372,147 @@ export function getUnauthorizedPage(): string {
   `;
 
   return getBaseTemplate('Access Denied', content);
+}
+
+export function getAdminSetupPage(): string {
+  const content = `
+    <div class="max-w-4xl mx-auto">
+      <div class="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-8">
+        <div class="flex items-center">
+          <div class="flex-shrink-0">
+            <svg class="h-8 w-8 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <div class="ml-3">
+            <h3 class="text-lg font-medium text-blue-900">Admin Setup Information</h3>
+            <p class="mt-2 text-sm text-blue-700">
+              Your authentication system has been successfully deployed! Here's how to access the admin panel.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <!-- Default Admin Credentials -->
+        <div class="bg-white shadow rounded-lg p-6">
+          <h2 class="text-xl font-semibold text-gray-900 mb-4">Default Admin Account</h2>
+          <div class="space-y-4">
+            <div class="bg-gray-50 p-4 rounded-lg">
+              <h3 class="font-medium text-gray-900 mb-2">Admin Email:</h3>
+              <code class="text-sm bg-gray-100 px-2 py-1 rounded text-blue-600">admin@myauth.com</code>
+            </div>
+            <div class="text-sm text-gray-600">
+              <p><strong>Note:</strong> This email will automatically receive admin privileges when used to sign in.</p>
+            </div>
+            <div class="pt-4">
+              <a id="admin-signin-btn"
+                 class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">
+                <svg class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-6 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Sign In as Admin
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Other Admin Emails -->
+        <div class="bg-white shadow rounded-lg p-6">
+          <h2 class="text-xl font-semibold text-gray-900 mb-4">Additional Admin Emails</h2>
+          <div class="space-y-3">
+            <p class="text-sm text-gray-600 mb-4">
+              The following emails will also automatically receive admin privileges:
+            </p>
+            <div class="space-y-2">
+              <div class="bg-gray-50 p-3 rounded">
+                <code class="text-sm text-blue-600">admin@example.com</code>
+              </div>
+              <div class="bg-gray-50 p-3 rounded">
+                <code class="text-sm text-blue-600">admin@localhost</code>
+              </div>
+            </div>
+            <div class="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <p class="text-sm text-yellow-800">
+                <strong>Security Note:</strong> Remember to change these default admin emails in production environments.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- How to Access Admin Panel -->
+        <div class="bg-white shadow rounded-lg p-6 md:col-span-2">
+          <h2 class="text-xl font-semibold text-gray-900 mb-4">How to Access Admin Features</h2>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="text-center">
+              <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-3">
+                <span class="text-xl font-bold text-blue-600">1</span>
+              </div>
+              <h3 class="font-medium text-gray-900 mb-2">Sign In</h3>
+              <p class="text-sm text-gray-600">Use one of the admin emails to sign in via the authentication form.</p>
+            </div>
+            <div class="text-center">
+              <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-3">
+                <span class="text-xl font-bold text-green-600">2</span>
+              </div>
+              <h3 class="font-medium text-gray-900 mb-2">Dashboard</h3>
+              <p class="text-sm text-gray-600">You'll be redirected to the dashboard where you'll see admin options.</p>
+            </div>
+            <div class="text-center">
+              <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mx-auto mb-3">
+                <span class="text-xl font-bold text-purple-600">3</span>
+              </div>
+              <h3 class="font-medium text-gray-900 mb-2">Admin Panel</h3>
+              <p class="text-sm text-gray-600">Click on "Admin Panel" to manage users and system settings.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- API Endpoints -->
+        <div class="bg-white shadow rounded-lg p-6 md:col-span-2">
+          <h2 class="text-xl font-semibold text-gray-900 mb-4">Available API Endpoints</h2>
+          <div class="overflow-x-auto">
+            <table class="min-w-full">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Method</th>
+                  <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Endpoint</th>
+                  <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
+                  <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Auth Required</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-200">
+                <tr>
+                  <td class="px-4 py-2"><span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">GET</span></td>
+                  <td class="px-4 py-2"><code class="text-sm">/dashboard</code></td>
+                  <td class="px-4 py-2 text-sm">User dashboard</td>
+                  <td class="px-4 py-2 text-sm">User+</td>
+                </tr>
+                <tr>
+                  <td class="px-4 py-2"><span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">GET</span></td>
+                  <td class="px-4 py-2"><code class="text-sm">/admin</code></td>
+                  <td class="px-4 py-2 text-sm">Admin panel</td>
+                  <td class="px-4 py-2 text-sm">Admin</td>
+                </tr>
+                <tr>
+                  <td class="px-4 py-2"><span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">POST</span></td>
+                  <td class="px-4 py-2"><code class="text-sm">/api/logout</code></td>
+                  <td class="px-4 py-2 text-sm">End session</td>
+                  <td class="px-4 py-2 text-sm">User+</td>
+                </tr>
+                <tr>
+                  <td class="px-4 py-2"><span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">GET</span></td>
+                  <td class="px-4 py-2"><code class="text-sm">/api/users</code></td>
+                  <td class="px-4 py-2 text-sm">List all users</td>
+                  <td class="px-4 py-2 text-sm">Admin</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  return getBaseTemplate('Admin Setup', content);
 } 
