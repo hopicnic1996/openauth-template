@@ -75,13 +75,18 @@ export function getBaseTemplate(title: string, content: string, user?: User): st
             }
         }
 
+        // Prevent infinite loops with a session flag
+        const hasProcessedToken = sessionStorage.getItem('token_processed');
+        
         // Handle token from URL - store it and clean URL
         const urlParams = new URLSearchParams(location.search);
         const urlToken = urlParams.get('token');
+        const storedToken = localStorage.getItem('auth_token');
         
-        if (urlToken) {
+        if (urlToken && !hasProcessedToken) {
             // Store token in localStorage
             localStorage.setItem('auth_token', urlToken);
+            sessionStorage.setItem('token_processed', 'true');
             
             // Clean URL by removing the token parameter
             urlParams.delete('token');
@@ -90,19 +95,15 @@ export function getBaseTemplate(title: string, content: string, user?: User): st
             // Replace the current URL without the token and reload to show authenticated state
             history.replaceState({}, document.title, cleanUrl);
             window.location.reload();
-        } else {
-            // If no token in URL, check if we have one in localStorage
-            const storedToken = localStorage.getItem('auth_token');
+        } else if (!urlToken && storedToken && !hasProcessedToken) {
+            // If no token in URL but we have one stored, add it for protected pages
+            const protectedPages = ['/dashboard', '/profile', '/admin'];
+            const isProtectedPage = protectedPages.includes(location.pathname);
             
-            // Add token to URL for protected pages if we have one stored
-            if (storedToken) {
-                const protectedPages = ['/dashboard', '/profile', '/admin'];
-                const isProtectedPage = protectedPages.includes(location.pathname);
-                
-                if (isProtectedPage && !urlParams.has('token')) {
-                    // Add token to current page URL for server-side authentication
-                    window.location.href = location.pathname + '?token=' + storedToken;
-                }
+            if (isProtectedPage) {
+                // Add token to current page URL for server-side authentication
+                sessionStorage.setItem('token_processed', 'true');
+                window.location.href = location.pathname + '?token=' + storedToken;
             }
         }
 
