@@ -38,7 +38,7 @@ export function getBaseTemplate(title: string, content: string, user?: User): st
                 </div>
                 ` : `
                 <div class="flex items-center">
-                    <a href="/login/password" 
+                    <a id="nav-signin-btn"
                        class="bg-white text-blue-600 px-4 py-2 rounded-lg font-medium hover:bg-gray-100 transition-colors mr-3">
                         Sign In
                     </a>
@@ -109,6 +109,13 @@ export function getBaseTemplate(title: string, content: string, user?: User): st
             adminSignInBtn.href = '/authorize?response_type=code&client_id=web&redirect_uri=' + 
                 encodeURIComponent(window.location.origin + '/dashboard') + '&scope=openid';
         }
+
+        // Set up the navigation "Sign In" button to redirect to the authorization page
+        const navSignInBtn = document.getElementById('nav-signin-btn');
+        if (navSignInBtn) {
+            navSignInBtn.href = '/authorize?response_type=code&client_id=web&redirect_uri=' + 
+                encodeURIComponent(window.location.origin + '/dashboard') + '&scope=openid';
+        }
     </script>
 </body>
 </html>
@@ -150,7 +157,7 @@ export function getHomePage(user?: User): string {
                 Sign in to access your personalized dashboard and manage your account.
             </p>
             <div class="mt-10 flex items-center justify-center gap-x-6">
-                <a href="/login/password"
+                <a id="get-started-btn"
                    class="gradient-bg px-8 py-3 text-lg font-semibold text-white shadow-sm hover:bg-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 rounded-lg transition-colors">
                     Get Started
                 </a>
@@ -443,7 +450,7 @@ export function getAdminSetupPage(): string {
               <p><strong>Note:</strong> This email will automatically receive admin privileges when used to sign in.</p>
             </div>
             <div class="pt-4">
-              <a href="/login/password"
+              <a id="admin-signin-btn"
                  class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">
                 <svg class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-6 0a9 9 0 11-18 0 9 9 0 0118 0z" />
