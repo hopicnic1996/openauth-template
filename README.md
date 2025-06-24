@@ -1,49 +1,195 @@
-# OpenAuth Server
+# Complete Authentication & Authorization System
 
-[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/cloudflare/templates/tree/main/openauth-template)
+A comprehensive authentication and authorization system built with OpenAuth and Cloudflare Workers, featuring role-based access control, session management, and a modern web interface.
 
-![OpenAuth Template Preview](https://imagedelivery.net/wSMYJvS3Xw-n339CbDyDIA/b2ff10c6-8f7c-419f-8757-e2ccf1c84500/public)
+## Features
 
-<!-- dash-content-start -->
+### 🔐 Authentication
+- **Passwordless authentication** with email verification codes
+- **Secure session management** with JWT-like tokens
+- **Automatic session cleanup** for expired sessions
+- **Multi-device support** with session tracking
 
-[OpenAuth](https://openauth.js.org/) is a universal provider for managing user authentication. By deploying OpenAuth on Cloudflare Workers, you can add scalable authentication to your application. This demo showcases login, user registration, and password reset, with storage and state powered by [D1](https://developers.cloudflare.com/d1/) and [KV](https://developers.cloudflare.com/kv/).
+### 👥 Authorization
+- **Role-based access control** (User, Moderator, Admin)
+- **Hierarchical permissions** system
+- **Protected routes** with middleware
+- **API endpoint protection**
 
-> [!IMPORTANT]
-> When using C3 to create this project, select "no" when it asks if you want to deploy. You need to follow this project's [setup steps](https://github.com/cloudflare/templates/tree/main/openauth-template#setup-steps) before deploying.
+### 🎨 User Interface
+- **Modern, responsive design** with Tailwind CSS
+- **Professional landing page** with feature highlights
+- **User dashboard** with profile overview
+- **Admin panel** for user management
+- **Profile management** pages
 
-<!-- dash-content-end -->
+### 🚀 Infrastructure
+- **Cloudflare Workers** for global edge deployment
+- **Cloudflare D1** for SQLite database
+- **Cloudflare KV** for session storage
+- **TypeScript** for type safety
+
+## Project Structure
+
+```
+src/
+├── index.ts        # Main application router and handlers
+├── auth.ts         # Authentication & authorization utilities
+└── templates.ts    # HTML templates and UI components
+
+migrations/
+├── 0001_create_user_table.sql    # Initial user table
+└── 0002_enhance_user_table.sql   # Enhanced schema with roles and sessions
+```
+
+## Database Schema
+
+### Users Table
+- **id**: Unique identifier (UUID)
+- **email**: User email (unique)
+- **role**: User role (user, moderator, admin)
+- **first_name**: Optional first name
+- **last_name**: Optional last name
+- **last_login**: Last login timestamp
+- **is_active**: Account status
+- **created_at**: Account creation date
+- **updated_at**: Last update timestamp
+
+### Sessions Table
+- **id**: Session identifier
+- **user_id**: Reference to user
+- **token**: Session token (UUID)
+- **expires_at**: Session expiration
+- **created_at**: Session creation time
+
+## API Endpoints
+
+### Public Routes
+- `GET /` - Landing page
+- `GET /authorize` - OpenAuth login page
+- `GET /callback` - OAuth callback handler
+
+### Protected Routes
+- `GET /dashboard` - User dashboard (requires USER role)
+- `GET /profile` - Profile management (requires USER role)
+- `GET /admin` - Admin panel (requires ADMIN role)
+
+### API Routes
+- `POST /api/logout` - End user session
+- `GET /api/sessions` - List user sessions (requires USER role)
+- `GET /api/users` - List all users (requires ADMIN role)
+
+## User Roles & Permissions
+
+### User (Level 1)
+- Access to dashboard
+- View own profile
+- Manage own sessions
+
+### Moderator (Level 2)
+- All User permissions
+- Extended moderation capabilities (extensible)
+
+### Admin (Level 3)
+- All Moderator permissions
+- Access to admin panel
+- View all users
+- Manage user accounts
+
+## Authentication Flow
+
+1. **Landing Page**: User visits `/` and sees the welcome page
+2. **Sign In**: User clicks "Get Started" → redirected to `/authorize`
+3. **Email Verification**: User enters email and receives verification code
+4. **Code Entry**: User enters code to complete authentication
+5. **Session Creation**: System creates session token and user record
+6. **Dashboard Redirect**: User redirected to `/dashboard` with session token
+7. **Token Storage**: Frontend stores token in localStorage for subsequent requests
+
+## Session Management
+
+- **Token-based sessions** with 7-day expiration
+- **Automatic cleanup** of expired sessions
+- **Multiple device support** - users can have multiple active sessions
+- **Secure token generation** using crypto.randomUUID()
+- **Session validation** on every protected request
+
+## Security Features
+
+- **Role-based authorization** with hierarchical permissions
+- **Session token validation** on protected routes
+- **Automatic session expiration** and cleanup
+- **HTTPS-only deployment** via Cloudflare Workers
+- **XSS protection** with proper HTML escaping
+- **CSRF protection** via token-based sessions
 
 ## Getting Started
 
-Outside of this repo, you can start a new project with this template using [C3](https://developers.cloudflare.com/pages/get-started/c3/) (the `create-cloudflare` CLI):
+### Prerequisites
+- Node.js 18+
+- Cloudflare account
+- Wrangler CLI
 
+### Installation
 ```bash
-npm create cloudflare@latest -- --template=cloudflare/templates/openauth-template
+npm install
 ```
 
-A live public deployment of this template is available at [https://openauth-template.templates.workers.dev](https://openauth-template.templates.workers.dev)
+### Database Setup
+```bash
+# Apply migrations
+wrangler d1 migrations apply AUTH_DB --local  # For development
+wrangler d1 migrations apply AUTH_DB --remote # For production
+```
 
-## Setup Steps
+### Development
+```bash
+npm run dev
+```
 
-1. Install the project dependencies with a package manager of your choice:
-   ```bash
-   npm install
-   ```
-2. Create a [D1 database](https://developers.cloudflare.com/d1/get-started/) with the name "openauth-template-auth-db":
-   ```bash
-   npx wrangler d1 create openauth-template-auth-db
-   ```
-   ...and update the `database_id` field in `wrangler.json` with the new database ID.
-3. Run the following db migration to initialize the database (notice the `migrations` directory in this project):
-   ```bash
-   npx wrangler d1 migrations apply --remote openauth-template-auth-db
-   ```
-4. Create a [kv namespace](https://developers.cloudflare.com/kv/get-started/) with a binding named "AUTH_STORAGE":
-   ```bash
-   npx wrangler kv namespace create AUTH_STORAGE
-   ```
-   ...and update the `kv_namespaces` -> `id` field in `wrangler.json` with the new namespace ID.
-5. Deploy the project!
-   ```bash
-   npx wrangler deploy
-   ```
+### Deployment
+```bash
+npm run deploy
+```
+
+## Configuration
+
+### Environment Variables
+Configure in `wrangler.json`:
+- `AUTH_STORAGE`: KV namespace for session storage
+- `AUTH_DB`: D1 database for user data
+
+### Email Provider
+Update the `sendCode` function in `src/index.ts` to integrate with your email provider (e.g., Resend, SendGrid).
+
+## Customization
+
+### Adding New Roles
+1. Add role to `UserRole` enum in `src/auth.ts`
+2. Update role hierarchy in `hasRole` function
+3. Add role-specific routes and permissions
+
+### Styling
+The UI uses Tailwind CSS with a custom blue gradient theme. Modify the CSS classes in `src/templates.ts` to match your brand.
+
+### Email Templates
+Customize the email verification code delivery in the `sendCode` function.
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
+
+## License
+
+MIT License - see LICENSE file for details.
+
+## Support
+
+For issues and questions:
+- Check the OpenAuth documentation
+- Review Cloudflare Workers documentation
+- Open an issue in this repository
