@@ -77,7 +77,18 @@ export default {
 } satisfies ExportedHandler<Env>;
 
 async function handleHomePage(request: Request, env: Env): Promise<Response> {
-  return new Response(getHomePage(), {
+  // Check if user is already authenticated
+  const token = getSessionToken(request);
+  let user: User | undefined = undefined;
+  
+  if (token) {
+    const authUser = await getUserBySession(env, token);
+    if (authUser) {
+      user = authUser;
+    }
+  }
+  
+  return new Response(getHomePage(user), {
     headers: { "Content-Type": "text/html" }
   });
 }
@@ -336,13 +347,17 @@ async function handleOpenAuth(request: Request, env: Env, ctx: ExecutionContext)
         FROM user WHERE id = ?
       `).bind(userId).first<any>();
 
-      return ctx.subject("user", {
+      // Create the subject with custom session token in a cookie or header
+      const subjectResponse = ctx.subject("user", {
         id: user.id,
         email: user.email,
         role: user.role || UserRole.USER,
         firstName: user.first_name || "",
         lastName: user.last_name || "",
       });
+
+      // Return a redirect response instead of the default subject response
+      return Response.redirect(`/dashboard?token=${sessionToken}`);
     },
   }).fetch(request, env, ctx);
 }

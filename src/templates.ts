@@ -38,7 +38,7 @@ export function getBaseTemplate(title: string, content: string, user?: User): st
                 </div>
                 ` : `
                 <div class="flex items-center">
-                    <a href="/authorize" 
+                    <a href="/login/password" 
                        class="bg-white text-blue-600 px-4 py-2 rounded-lg font-medium hover:bg-gray-100 transition-colors mr-3">
                         Sign In
                     </a>
@@ -57,21 +57,6 @@ export function getBaseTemplate(title: string, content: string, user?: User): st
     </main>
 
     <script>
-        // Set up the Get Started button href
-        document.addEventListener('DOMContentLoaded', function() {
-            const getStartedBtn = document.getElementById('get-started-btn');
-            if (getStartedBtn) {
-                const redirectUri = encodeURIComponent(location.origin + '/dashboard');
-                getStartedBtn.href = '/authorize?redirect_uri=' + redirectUri + '&client_id=your-client-id&response_type=code';
-            }
-
-            const adminSigninBtn = document.getElementById('admin-signin-btn');
-            if (adminSigninBtn) {
-                const redirectUri = encodeURIComponent(location.origin + '/dashboard');
-                adminSigninBtn.href = '/authorize?redirect_uri=' + redirectUri + '&client_id=your-client-id&response_type=code';
-            }
-        });
-
         function logout() {
             const token = localStorage.getItem('auth_token') || new URLSearchParams(location.search).get('token');
             if (token) {
@@ -94,9 +79,21 @@ export function getBaseTemplate(title: string, content: string, user?: User): st
         const urlToken = new URLSearchParams(location.search).get('token');
         if (urlToken) {
             localStorage.setItem('auth_token', urlToken);
-            // Clean URL without token
+            // Clean URL without token and reload to show authenticated state
             const cleanUrl = location.pathname;
             history.replaceState({}, document.title, cleanUrl);
+            window.location.reload();
+        }
+
+        // Add token to page requests for authentication
+        const storedToken = localStorage.getItem('auth_token');
+        if (storedToken && !urlToken && !window.location.search.includes('token=')) {
+            // Add token to current page URL for server-side authentication
+            const currentUrl = new URL(window.location);
+            currentUrl.searchParams.set('token', storedToken);
+            if (currentUrl.toString() !== window.location.toString()) {
+                window.location.href = currentUrl.toString();
+            }
         }
     </script>
 </body>
@@ -104,10 +101,33 @@ export function getBaseTemplate(title: string, content: string, user?: User): st
   `;
 }
 
-export function getHomePage(): string {
+export function getHomePage(user?: User): string {
   const content = `
     <div class="text-center">
         <div class="max-w-3xl mx-auto">
+            ${user ? `
+            <h1 class="text-4xl font-bold text-gray-900 sm:text-6xl">
+                Welcome back, ${user.firstName || user.email.split('@')[0]}!
+            </h1>
+            <p class="mt-6 text-lg leading-8 text-gray-600">
+                You're signed in to myAuth. Access your dashboard to manage your account and explore your features.
+            </p>
+            <div class="mt-10 flex items-center justify-center gap-x-6">
+                <a href="/dashboard"
+                   class="gradient-bg px-8 py-3 text-lg font-semibold text-white shadow-sm hover:bg-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 rounded-lg transition-colors">
+                    Go to Dashboard
+                </a>
+                ${user.role === 'admin' ? `
+                <a href="/admin" class="text-lg font-semibold leading-6 text-gray-900">
+                    Admin Panel <span aria-hidden="true">→</span>
+                </a>
+                ` : `
+                <a href="/profile" class="text-lg font-semibold leading-6 text-gray-900">
+                    View Profile <span aria-hidden="true">→</span>
+                </a>
+                `}
+            </div>
+            ` : `
             <h1 class="text-4xl font-bold text-gray-900 sm:text-6xl">
                 Welcome to myAuth
             </h1>
@@ -116,7 +136,7 @@ export function getHomePage(): string {
                 Sign in to access your personalized dashboard and manage your account.
             </p>
             <div class="mt-10 flex items-center justify-center gap-x-6">
-                <a id="get-started-btn"
+                <a href="/login/password"
                    class="gradient-bg px-8 py-3 text-lg font-semibold text-white shadow-sm hover:bg-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 rounded-lg transition-colors">
                     Get Started
                 </a>
@@ -124,9 +144,11 @@ export function getHomePage(): string {
                     Learn more <span aria-hidden="true">→</span>
                 </a>
             </div>
+            `}
         </div>
     </div>
 
+    ${!user ? `
     <div id="features" class="py-24 sm:py-32">
         <div class="mx-auto max-w-7xl px-6 lg:px-8">
             <div class="mx-auto max-w-2xl lg:text-center">
@@ -180,9 +202,10 @@ export function getHomePage(): string {
             </div>
         </div>
     </div>
+    ` : ''}
   `;
 
-  return getBaseTemplate('Home', content);
+  return getBaseTemplate('Home', content, user);
 }
 
 export function getDashboard(user: User): string {
@@ -406,7 +429,7 @@ export function getAdminSetupPage(): string {
               <p><strong>Note:</strong> This email will automatically receive admin privileges when used to sign in.</p>
             </div>
             <div class="pt-4">
-              <a id="admin-signin-btn"
+              <a href="/login/password"
                  class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">
                 <svg class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-6 0a9 9 0 11-18 0 9 9 0 0118 0z" />
