@@ -95,6 +95,20 @@ export function getBaseTemplate(title: string, content: string, user?: User): st
                 window.location.href = currentUrl.toString();
             }
         }
+
+        // Set up the "Get Started" button to redirect to the authorization page
+        const getStartedBtn = document.getElementById('get-started-btn');
+        if (getStartedBtn) {
+            getStartedBtn.href = '/authorize?response_type=code&client_id=web&redirect_uri=' + 
+                encodeURIComponent(window.location.origin + '/dashboard') + '&scope=openid';
+        }
+
+        // Set up the "Admin Sign In" button to redirect to the authorization page  
+        const adminSignInBtn = document.getElementById('admin-signin-btn');
+        if (adminSignInBtn) {
+            adminSignInBtn.href = '/authorize?response_type=code&client_id=web&redirect_uri=' + 
+                encodeURIComponent(window.location.origin + '/dashboard') + '&scope=openid';
+        }
     </script>
 </body>
 </html>
